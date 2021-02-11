@@ -7,27 +7,69 @@ function App() {
   const [list, setList] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editID, setEditID] = useState(null);
-  const [alert, setAlert] = useState({ show: false, msg: "", type: "" });
+  const [alert, setAlert] = useState({
+    show: false,
+    msg: "",
+    type: "",
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name) {
-      // display alert
+      showAlert(true, "please enter value", "danger");
     } else if (name && isEditing) {
-      // deal with edit
+      setList(
+        list.map((item) => {
+          if (item.id === editID) {
+            return { ...item, title: name };
+          } else {
+            return item;
+          }
+        })
+      );
+      setName("");
+      setEditID(null);
+      setIsEditing(false);
+      showAlert(true, "item edited", "success");
     } else {
       {
-        // show alert
+        showAlert(true, "item added to the list", "success");
         const newItem = { id: new Date().getTime().toString(), title: name };
         setList([...list, newItem]);
+        setName("");
       }
     }
+  };
+
+  const clearList = () => {
+    showAlert(true, "empty list", "danger");
+    setList([]);
+  };
+
+  const showAlert = (show = false, msg = "", type = "") => {
+    setAlert({
+      show,
+      type,
+      msg,
+    });
+  };
+
+  const removeItem = (id) => {
+    showAlert(true, "item removed", "danger");
+    setList(list.filter((item) => item.id !== id));
+  };
+
+  const editItem = (id) => {
+    const specificItem = list.find((item) => item.id === id);
+    setIsEditing(true);
+    setEditID(id);
+    setName(specificItem.title);
   };
 
   return (
     <section className="section-center">
       <form className="grocery-form" onSubmit={handleSubmit}>
-        {alert.show && <Alert />}
+        {alert.show && <Alert {...alert} removeAlert={showAlert} list={list} />}
         <h3>grocery bud</h3>
         <div className="form-control">
           <input
@@ -45,8 +87,10 @@ function App() {
 
       {list.length > 0 && (
         <div className="grocery-container">
-          <List items={list} />
-          <button className="clear-btn">clear items</button>
+          <List items={list} removeItem={removeItem} editItem={editItem} />
+          <button className="clear-btn" onClick={clearList}>
+            clear items
+          </button>
         </div>
       )}
     </section>
